@@ -2,8 +2,8 @@
 // Licensed under the MIT License.
 
 #import "AppCenterDelegateObjC.h"
-#import "MSEventFilter.h"
 #import "Constants.h"
+#import "MSEventFilter.h"
 
 @import AppCenter;
 @import AppCenterAnalytics;
@@ -33,7 +33,7 @@
 }
 
 - (void)startAnalyticsFromLibrary {
-  [MSACAppCenter startFromLibraryWithServices:@ [[MSACAnalytics class]]];
+  [MSACAppCenter startFromLibraryWithServices:@[ [MSACAnalytics class] ]];
 }
 
 - (NSString *)installId {
@@ -54,6 +54,14 @@
 
 - (void)setLogUrl:(NSString *)logUrl {
   [MSACAppCenter setLogUrl:logUrl];
+}
+
+- (BOOL)isNetworkRequestsAllowed {
+  return [MSACAppCenter isNetworkRequestsAllowed];
+}
+
+- (void)setNetworkRequestsAllowed:(BOOL)isAllowed {
+  [MSACAppCenter setNetworkRequestsAllowed:isAllowed];
 }
 
 #pragma mark - Modules section.
@@ -124,6 +132,18 @@
 
 - (void)generateTestCrash {
   return [MSACCrashes generateTestCrash];
+}
+
+- (void)trackError:(NSError *)error
+    withProperties:(NSDictionary<NSString *, NSString *> *)properties
+       attachments:(NSArray<MSACErrorAttachmentLog *> *)attachments {
+  [MSACCrashes trackError:error withProperties:properties attachments:attachments];
+}
+
+- (void)trackException:(MSACExceptionModel *)exceptionModel
+        withProperties:(NSDictionary<NSString *, NSString *> *)properties
+           attachments:(NSArray<MSACErrorAttachmentLog *> *)attachments {
+  [MSACCrashes trackException:exceptionModel withProperties:properties attachments:attachments];
 }
 
 #pragma mark - Last crash report section.

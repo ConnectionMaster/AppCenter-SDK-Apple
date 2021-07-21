@@ -25,6 +25,8 @@ class AppCenterDelegateSwift : AppCenterDelegate {
     return "Internal";
   }
   func isDebuggerAttached()->Bool { return AppCenter.isDebuggerAttached; }
+  func isNetworkRequestsAllowed()->Bool { return AppCenter.networkRequestsAllowed; }
+  func setNetworkRequestsAllowed(_ isAllowed: Bool) { AppCenter.networkRequestsAllowed = isAllowed; }
 
   // MARK: Analytics section.
   func isAnalyticsEnabled()->Bool { return Analytics.enabled; }
@@ -63,6 +65,14 @@ class AppCenterDelegateSwift : AppCenterDelegate {
 
   func generateTestCrash() {
     Crashes.generateTestCrash()
+  }
+    
+  func trackError(_ error: Error, withProperties: Dictionary<String, String>?, attachments: [ErrorAttachmentLog]?) {
+    Crashes.trackError(error, properties: withProperties, attachments: attachments)
+  }
+      
+  func trackException(_ exceptionModel: ExceptionModel, withProperties: Dictionary<String, String>?, attachments: [ErrorAttachmentLog]?) -> Void {
+    Crashes.trackException(exceptionModel, properties: withProperties, attachments: attachments)
   }
 
   //MARK: Last crash report section.

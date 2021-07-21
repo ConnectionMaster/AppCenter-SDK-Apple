@@ -51,6 +51,14 @@ enum StartupMode { APPCENTER, ONECOLLECTOR, BOTH, NONE, SKIP };
 
 @implementation AppDelegate
 
+- (UIViewController *)topMostViewController {
+  UIViewController *topController = self.window.rootViewController;
+  while (topController.presentedViewController) {
+    topController = topController.presentedViewController;
+  }
+  return topController;
+}
+
 - (BOOL)application:(UIApplication *)application didFinishLaunchingWithOptions:(NSDictionary *)launchOptions {
   [MSACAppCenter setLogLevel:MSACLogLevelVerbose];
   NSInteger startTarget = [[NSUserDefaults standardUserDefaults] integerForKey:kMSStartTargetKey];
@@ -103,7 +111,7 @@ enum StartupMode { APPCENTER, ONECOLLECTOR, BOTH, NONE, SKIP };
                          [alertController addAction:[UIAlertAction actionWithTitle:NSLocalizedString(@"OK", nil)
                                                                              style:UIAlertActionStyleDefault
                                                                            handler:nil]];
-                         [self.window.rootViewController presentViewController:alertController animated:YES completion:nil];
+                         [self.topMostViewController presentViewController:alertController animated:YES completion:nil];
                        }
                      });
                    }];
@@ -129,9 +137,9 @@ enum StartupMode { APPCENTER, ONECOLLECTOR, BOTH, NONE, SKIP };
 
   // Start App Center SDK.
 #if !TARGET_OS_MACCATALYST
-  NSArray<Class> *services = @ [[MSACAnalytics class], [MSACCrashes class], [MSACDistribute class]];
+  NSArray<Class> *services = @[ [MSACAnalytics class], [MSACCrashes class], [MSACDistribute class] ];
 #else
-  NSArray<Class> *services = @ [[MSACAnalytics class], [MSACCrashes class]];
+  NSArray<Class> *services = @[ [MSACAnalytics class], [MSACCrashes class] ];
 #endif
 #if GCC_PREPROCESSOR_MACRO_PUPPET
   NSString *appSecret = [[NSUserDefaults standardUserDefaults] objectForKey:kMSAppSecret] ?: kMSPuppetAppSecret;
@@ -241,7 +249,7 @@ enum StartupMode { APPCENTER, ONECOLLECTOR, BOTH, NONE, SKIP };
                                                                    }]];
 
                  // Show the alert controller.
-                 [self.window.rootViewController presentViewController:alertController animated:YES completion:nil];
+                 [self.topMostViewController presentViewController:alertController animated:YES completion:nil];
 
                  return YES;
                })];
@@ -262,17 +270,19 @@ enum StartupMode { APPCENTER, ONECOLLECTOR, BOTH, NONE, SKIP };
 #if GCC_PREPROCESSOR_MACRO_PUPPET
 #pragma mark - MSACAnalyticsDelegate
 
-- (void)analytics:(MSACAnalytics *)analytics willSendEventLog:(MSACEventLog *)eventLog {
+- (void)analytics:(nonnull MSACAnalytics *)analytics willSendEventLog:(nonnull MSACEventLog *)eventLog {
   [self.analyticsResult willSendWithEventLog:eventLog];
   [NSNotificationCenter.defaultCenter postNotificationName:kUpdateAnalyticsResultNotification object:self.analyticsResult];
 }
 
-- (void)analytics:(MSACAnalytics *)analytics didSucceedSendingEventLog:(MSACEventLog *)eventLog {
+- (void)analytics:(nonnull MSACAnalytics *)analytics didSucceedSendingEventLog:(nonnull MSACEventLog *)eventLog {
   [self.analyticsResult didSucceedSendingWithEventLog:eventLog];
   [NSNotificationCenter.defaultCenter postNotificationName:kUpdateAnalyticsResultNotification object:self.analyticsResult];
 }
 
-- (void)analytics:(MSACAnalytics *)analytics didFailSendingEventLog:(MSACEventLog *)eventLog withError:(NSError *)error {
+- (void)analytics:(nonnull MSACAnalytics *)analytics
+    didFailSendingEventLog:(nonnull MSACEventLog *)eventLog
+                 withError:(nullable NSError *)error {
   [self.analyticsResult didFailSendingWithEventLog:eventLog withError:error];
   [NSNotificationCenter.defaultCenter postNotificationName:kUpdateAnalyticsResultNotification object:self.analyticsResult];
 }
@@ -280,20 +290,22 @@ enum StartupMode { APPCENTER, ONECOLLECTOR, BOTH, NONE, SKIP };
 
 #pragma mark - MSACCrashesDelegate
 
-- (BOOL)crashes:(MSACCrashes *)crashes shouldProcessErrorReport:(MSACErrorReport *)errorReport {
+- (BOOL)crashes:(nonnull MSACCrashes *)crashes shouldProcessErrorReport:(nonnull MSACErrorReport *)errorReport {
   NSLog(@"Should process error report with: %@", errorReport.exceptionReason);
   return YES;
 }
 
-- (void)crashes:(MSACCrashes *)crashes willSendErrorReport:(MSACErrorReport *)errorReport {
+- (void)crashes:(nonnull MSACCrashes *)crashes willSendErrorReport:(nonnull MSACErrorReport *)errorReport {
   NSLog(@"Will send error report with: %@", errorReport.exceptionReason);
 }
 
-- (void)crashes:(MSACCrashes *)crashes didSucceedSendingErrorReport:(MSACErrorReport *)errorReport {
+- (void)crashes:(nonnull MSACCrashes *)crashes didSucceedSendingErrorReport:(nonnull MSACErrorReport *)errorReport {
   NSLog(@"Did succeed error report sending with: %@", errorReport.exceptionReason);
 }
 
-- (void)crashes:(MSACCrashes *)crashes didFailSendingErrorReport:(MSACErrorReport *)errorReport withError:(NSError *)error {
+- (void)crashes:(nonnull MSACCrashes *)crashes
+    didFailSendingErrorReport:(nonnull MSACErrorReport *)errorReport
+                    withError:(nullable NSError *)error {
   NSLog(@"Did fail sending report with: %@, and error: %@", errorReport.exceptionReason, error.localizedDescription);
 }
 
@@ -381,7 +393,7 @@ enum StartupMode { APPCENTER, ONECOLLECTOR, BOTH, NONE, SKIP };
                                                       }]];
 
     // Show the alert controller.
-    [self.window.rootViewController presentViewController:alertController animated:YES completion:nil];
+    [self.topMostViewController presentViewController:alertController animated:YES completion:nil];
     return YES;
   }
   return NO;
@@ -389,22 +401,10 @@ enum StartupMode { APPCENTER, ONECOLLECTOR, BOTH, NONE, SKIP };
 
 - (void)distributeNoReleaseAvailable:(MSACDistribute *)distribute {
   NSLog(@"distributeNoReleaseAvailable invoked");
-  UIAlertController *alert = [UIAlertController alertControllerWithTitle:nil
-                                                                 message:NSLocalizedString(@"No updates available", nil)
-                                                          preferredStyle:UIAlertControllerStyleAlert];
-  [alert addAction:[UIAlertAction actionWithTitle:NSLocalizedString(@"OK", nil) style:UIAlertActionStyleDefault handler:nil]];
-  [self.window.rootViewController presentViewController:alert animated:YES completion:nil];
 }
 
 - (void)distributeWillExitApp:(MSACDistribute *)distribute {
-  dispatch_async(dispatch_get_main_queue(), ^{
-    UIAlertController *alertController =
-        [UIAlertController alertControllerWithTitle:NSLocalizedStringFromTable(@"distribute_alert_willExit_title", @"Sasquatch", @"")
-                                            message:NSLocalizedStringFromTable(@"distribute_alert_willExit_message", @"Sasquatch", @"")
-                                     preferredStyle:UIAlertControllerStyleAlert];
-    [self.window.rootViewController presentViewController:alertController animated:YES completion:nil];
-  });
-  sleep(7);
+  NSLog(@"distributeWillExitApp callback invoked");
 }
 
 #endif

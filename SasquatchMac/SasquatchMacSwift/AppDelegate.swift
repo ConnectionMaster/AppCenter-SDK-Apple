@@ -20,6 +20,11 @@ enum StartupMode: Int {
 @objc(AppDelegate)
 class AppDelegate: NSObject, NSApplicationDelegate, CrashesDelegate, CLLocationManagerDelegate {
 
+  // Enable closing app by pressing Close button.
+  func applicationShouldTerminateAfterLastWindowClosed(_ sender: NSApplication) -> Bool {
+    return true
+  }
+
   var rootController: NSWindowController!
   var locationManager: CLLocationManager = CLLocationManager()
     
@@ -140,56 +145,33 @@ class AppDelegate: NSObject, NSApplicationDelegate, CrashesDelegate, CLLocationM
   }
   // Crashes Delegate
 
-  func crashes(_ crashes: Crashes, shouldProcess errorReport: ErrorReport) -> Bool {
+  func crashes(_ crashes: Crashes!, shouldProcess errorReport: ErrorReport!) -> Bool {
     if errorReport.exceptionReason != nil {
       NSLog("Should process error report with: %@", errorReport.exceptionReason);
     }
     return true
   }
 
-  func crashes(_ crashes: Crashes, willSend errorReport: ErrorReport) {
+  func crashes(_ crashes: Crashes!, willSend errorReport: ErrorReport!) {
     if errorReport.exceptionReason != nil {
       NSLog("Will send error report with: %@", errorReport.exceptionReason);
     }
   }
 
-  func crashes(_ crashes: Crashes, didSucceedSending errorReport: ErrorReport) {
+  func crashes(_ crashes: Crashes!, didSucceedSending errorReport: ErrorReport!) {
     if errorReport.exceptionReason != nil {
       NSLog("Did succeed error report sending with: %@", errorReport.exceptionReason);
     }
   }
 
-  func crashes(_ crashes: Crashes, didFailSending errorReport: ErrorReport, withError error: Error) {
+  func crashes(_ crashes: Crashes!, didFailSending errorReport: ErrorReport!, withError error: Error?) {
     if errorReport.exceptionReason != nil {
-      NSLog("Did fail sending report with: %@, and error: %@", errorReport.exceptionReason, error.localizedDescription);
+        NSLog("Did fail sending report with: %@, and error: %@", errorReport.exceptionReason, error?.localizedDescription ?? "null");
     }
   }
 
-  func attachments(with crashes: Crashes, for errorReport: ErrorReport) -> [ErrorAttachmentLog] {
-    var attachments = [ErrorAttachmentLog]()
-
-    // Text attachment.
-    let text = UserDefaults.standard.string(forKey: "textAttachment") ?? ""
-    if !text.isEmpty {
-      let textAttachment = ErrorAttachmentLog.attachment(withText: text, filename: "user.log")!
-      attachments.append(textAttachment)
-    }
-
-    // Binary attachment.
-    let referenceUrl = UserDefaults.standard.url(forKey: "fileAttachment")
-    if referenceUrl != nil {
-      do {
-        let data = try Data(contentsOf: referenceUrl!)
-        let uti = UTTypeCreatePreferredIdentifierForTag(kUTTagClassFilenameExtension, referenceUrl!.pathExtension as NSString, nil)?.takeRetainedValue()
-        let mime = UTTypeCopyPreferredTagWithClass(uti!, kUTTagClassMIMEType)?.takeRetainedValue() as NSString?
-        let binaryAttachment = ErrorAttachmentLog.attachment(withBinary: data, filename: referenceUrl?.lastPathComponent, contentType: mime! as String)!
-        attachments.append(binaryAttachment)
-        print("Add binary attachment with \(data.count) bytes")
-      } catch {
-        print(error)
-      }
-    }
-    return attachments
+  func attachments(with crashes: Crashes!, for errorReport: ErrorReport!) -> [ErrorAttachmentLog] {
+    return PrepareErrorAttachments.prepareAttachments()
   }
     
   // CLLocationManager Delegate

@@ -29,7 +29,8 @@
 #import "MSACErrorAttachmentLogInternal.h"
 #import "MSACErrorLogFormatter.h"
 #import "MSACErrorReportPrivate.h"
-#import "MSACException.h"
+#import "MSACWrapperExceptionModel.h"
+#import "MSACExceptionModel.h"
 #import "MSACHandledErrorLog.h"
 #import "MSACLoggerInternal.h"
 #import "MSACSessionContext.h"
@@ -208,6 +209,20 @@ __attribute__((noreturn)) static void uncaught_cxx_exception_handler(const MSACC
 
 #pragma mark - Public Methods
 
++ (NSString *)trackError:(NSError *)error
+          withProperties:(nullable NSDictionary<NSString *, NSString *> *)properties
+             attachments:(nullable NSArray<MSACErrorAttachmentLog *> *)attachments {
+  return [[MSACCrashes sharedInstance] trackError:[[MSACExceptionModel alloc] initWithError:error]
+                                   withProperties:properties
+                                      attachments:attachments];
+}
+
++ (NSString *)trackException:(MSACExceptionModel *)exceptionModel
+                      withProperties:(nullable NSDictionary<NSString *, NSString *> *)properties
+                         attachments:(nullable NSArray<MSACErrorAttachmentLog *> *)attachments {
+  return [[MSACCrashes sharedInstance] trackError:exceptionModel withProperties:properties attachments:attachments];
+}
+
 + (void)generateTestCrash {
   @synchronized([MSACCrashes sharedInstance]) {
     if ([[MSACCrashes sharedInstance] canBeUsed]) {
@@ -301,7 +316,8 @@ __attribute__((noreturn)) static void uncaught_cxx_exception_handler(const MSACC
       @"MSWrapperException" : MSACWrapperException.self,
       @"MSAbstractErrorLog" : MSACAbstractErrorLog.self,
       @"MSHandledErrorLog" : MSACHandledErrorLog.self,
-      @"MSException" : MSACException.self,
+      @"MSException" : MSACWrapperExceptionModel.self,
+      @"MSACException" : MSACWrapperExceptionModel.self,
       @"MSStackFrame" : MSACStackFrame.self,
       @"MSBinary" : MSACBinary.self,
       @"MSErrorAttachmentLog" : MSACErrorAttachmentLog.self,
@@ -665,7 +681,7 @@ __attribute__((noreturn)) static void uncaught_cxx_exception_handler(const MSACC
   }
 }
 
-- (void)channel:(id<MSACChannelProtocol>)__unused channel didFailSendingLog:(id<MSACLog>)log withError:(NSError *)error {
+- (void)channel:(id<MSACChannelProtocol>)__unused channel didFailSendingLog:(id<MSACLog>)log withError:(nullable NSError *)error {
   id<MSACCrashesDelegate> delegate = self.delegate;
   if ([delegate respondsToSelector:@selector(crashes:didFailSendingErrorReport:withError:)]) {
     NSObject *logObject = static_cast<NSObject *>(log);
@@ -1304,6 +1320,13 @@ __attribute__((noreturn)) static void uncaught_cxx_exception_handler(const MSACC
     id<MSACCrashesDelegate> delegate = self.delegate;
     if ([delegate respondsToSelector:@selector(attachmentsWithCrashes:forErrorReport:)]) {
       attachments = [delegate attachmentsWithCrashes:self forErrorReport:report];
+
+      // Use the device information from the error log, otherwise the current device information will be used.
+      for (MSACErrorAttachmentLog *attachment in attachments) {
+        if (attachment != nil && attachment.device == nil) {
+          attachment.device = log.device;
+        }
+      }
     } else {
       MSACLogDebug([MSACCrashes logTag], @"attachmentsWithCrashes is not implemented");
     }
@@ -1347,9 +1370,9 @@ __attribute__((noreturn)) static void uncaught_cxx_exception_handler(const MSACC
 
 #pragma mark - Handled exceptions
 
-- (NSString *)trackModelException:(MSACException *)exception
-                   withProperties:(nullable NSDictionary<NSString *, NSString *> *)properties
-                  withAttachments:(nullable NSArray<MSACErrorAttachmentLog *> *)attachments {
+- (NSString *)trackError:(MSACExceptionModel *)exception
+          withProperties:(nullable NSDictionary<NSString *, NSString *> *)properties
+             attachments:(nullable NSArray<MSACErrorAttachmentLog *> *)attachments {
   @synchronized(self) {
     if (![self canBeUsed] || ![self isEnabled]) {
       return nil;

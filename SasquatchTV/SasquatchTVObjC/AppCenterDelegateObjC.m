@@ -45,6 +45,14 @@
   return [MSACAppCenter isDebuggerAttached];
 }
 
+- (BOOL)isNetworkRequestsAllowed {
+  return [MSACAppCenter isNetworkRequestsAllowed];
+}
+
+- (void)setNetworkRequestsAllowed:(BOOL)isAllowed {
+  [MSACAppCenter setNetworkRequestsAllowed:isAllowed];
+}
+
 #pragma mark - Modules section.
 
 - (BOOL)isAnalyticsEnabled {
@@ -95,6 +103,18 @@
 
 - (void)generateTestCrash {
   return [MSACCrashes generateTestCrash];
+}
+
+- (void)trackError:(NSError *)error
+    withProperties:(NSDictionary<NSString *, NSString *> *)properties
+       attachments:(NSArray<MSACErrorAttachmentLog *> *)attachments {
+  [MSACCrashes trackError:error withProperties:properties attachments:attachments];
+}
+
+- (void)trackException:(MSACExceptionModel *)exceptionModel
+        withProperties:(NSDictionary<NSString *, NSString *> *)properties
+           attachments:(NSArray<MSACErrorAttachmentLog *> *)attachments {
+  [MSACCrashes trackException:exceptionModel withProperties:properties attachments:attachments];
 }
 
 #pragma mark - Last crash report section.

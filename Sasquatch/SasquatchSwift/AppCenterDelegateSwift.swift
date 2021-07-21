@@ -73,6 +73,14 @@ class AppCenterDelegateSwift: AppCenterDelegate {
   func setCountryCode(_ countryCode: String?) {
     AppCenter.countryCode = countryCode;
   }
+  
+  func isNetworkRequestsAllowed() -> Bool {
+    return AppCenter.networkRequestsAllowed
+  }
+  
+  func setNetworkRequestsAllowed(_ isAllowed: Bool) {
+    AppCenter.networkRequestsAllowed = isAllowed
+  }
 
   // Modules section.
   func isAnalyticsEnabled() -> Bool {
@@ -155,6 +163,14 @@ class AppCenterDelegateSwift: AppCenterDelegate {
   
   func generateTestCrash() {
     Crashes.generateTestCrash()
+  }
+    
+  func trackError(_ error: Error, withProperties: Dictionary<String, String>?, attachments: [ErrorAttachmentLog]?) {
+    Crashes.trackError(error, properties:withProperties, attachments:attachments)
+  }
+    
+  func trackException(_ exceptionModel: ExceptionModel, withProperties: Dictionary<String, String>?, attachments: [ErrorAttachmentLog]?) -> Void {
+    Crashes.trackException(exceptionModel, properties:withProperties, attachments: attachments)
   }
 
   // Distribute section.

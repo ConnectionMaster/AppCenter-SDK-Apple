@@ -28,7 +28,7 @@ let package = Package(
             targets: ["AppCenterDistribute"]),
     ],
     dependencies: [
-        .package(url: "https://github.com/microsoft/PLCrashReporter.git", .upToNextMinor(from: "1.8.0")),
+        .package(url: "https://github.com/microsoft/PLCrashReporter.git", .upToNextMinor(from: "1.9.0")),
     ],
     targets: [
         .target(
@@ -36,7 +36,7 @@ let package = Package(
             path: "AppCenter/AppCenter",
             exclude: ["Support"],
             cSettings: [
-                .define("APP_CENTER_C_VERSION", to:"\"4.1.1\""),
+                .define("APP_CENTER_C_VERSION", to:"\"4.2.0\""),
                 .define("APP_CENTER_C_BUILD", to:"\"1\""),
                 .headerSearchPath("**"),
             ],
@@ -88,9 +88,6 @@ let package = Package(
             dependencies: ["AppCenter"],
             path: "AppCenterDistribute/AppCenterDistribute",
             exclude: ["Support"],
-            resources: [
-                .process("Resources/AppCenterDistribute.strings"),
-            ],
             cSettings: [
                 .headerSearchPath("**"),
                 .headerSearchPath("../../AppCenter/AppCenter/**"),
@@ -98,6 +95,7 @@ let package = Package(
             linkerSettings: [
                 .linkedFramework("Foundation"),
                 .linkedFramework("SafariServices", .when(platforms: [.iOS])),
+                .linkedFramework("AuthenticationServices", .when(platforms: [.iOS])),
                 .linkedFramework("UIKit", .when(platforms: [.iOS])),
             ]
         )

@@ -1,10 +1,50 @@
 # App Center SDK for iOS, macOS and tvOS Change Log
 
-## Version 4.1.1 (Under development)
+## Version 4.2.1 (Under development)
+
+### App Center Crashes
+
+* **[Feature]** Add support for tracking handled errors with `Crashes.trackError` and `Crashes.trackException` APIs.
+
+### App Center Distribute
+
+- **[Fix]** Fix a warning `'Resources/AppCenterDistribute.strings': file not found` when resolving swift packages using Swift 5.5.
+
+___
+
+## Version 4.2.0
+
+### App Center
+
+* **[Feature]** Improved `AES` token encryption algorithm using `Encrypt-then-MAC` data authentication approach.
+* **[Feature]** Add a `AppCenter.networkRequestsAllowed` API to block any network requests without disabling the SDK.
+* **[Fix]** Fix umbrella header warnings in Xcode 12.5.
+
+### App Center Crashes
+
+* **[Fix]** Fix error nullability in crashes delegate.
+* **[Fix]** Merge the device information from the crash report with the SDK's device information in order to fix some time sensitive cases where the reported application information was incorrect.
+* **[Improvement]** Update PLCrashReporter to 1.9.0.
+
+### App Center Distribute
+
+* **[Fix]** Fix linking framework `AuthenticationServices`.
+* **[Fix]** Fix a warning in Distribute module that prevented using SDK as a source code on Xcode 12.5.
+
+___
+
+## Version 4.1.1
+
+### App Center
+
+* **[Improvement]** Use ASWebAuthenticationSession for authentication on iOS 12 or later.
+* **[Fix]** Fix Objective-C properties attributes warnings in MRC projects.
 
 ### App Center Distribute
 
 * **[Fix]** Fix `kMSACUpdateTokenRequestIdKey` never gets removed.
+
+___
 
 ## Version 4.1.0
 

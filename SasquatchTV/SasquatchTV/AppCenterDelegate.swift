@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 import Foundation;
+import AppCenterCrashes;
 
 /**
  * Protocol for interacting with App Center SDK.
@@ -17,6 +18,8 @@ import Foundation;
   func appSecret()->String;
   func logUrl()->String;
   func isDebuggerAttached()->Bool;
+  func isNetworkRequestsAllowed() -> Bool
+  func setNetworkRequestsAllowed(_ isAllowed: Bool)
 
   // MARK: Modules section.
   func isAnalyticsEnabled()->Bool;
@@ -34,6 +37,8 @@ import Foundation;
   // MARK: Crashes section.
   func hasCrashedInLastSession() -> Bool
   func generateTestCrash()
+  func trackError(_ error: Error, withProperties: Dictionary<String, String>?, attachments: [ErrorAttachmentLog]?)
+  func trackException(_ exceptionModel: ExceptionModel, withProperties: Dictionary<String, String>?, attachments: [ErrorAttachmentLog]?)
 
   // Last crash report section.
   func lastCrashReportIncidentIdentifier() -> String?

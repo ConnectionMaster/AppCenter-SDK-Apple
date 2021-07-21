@@ -21,6 +21,8 @@ import AppCenter
   func setUserId(_ userId: String?)
   func setLogUrl(_ logUrl: String?)
   func setCountryCode(_ countryCode: String?)
+  func isNetworkRequestsAllowed() -> Bool
+  func setNetworkRequestsAllowed(_ isAllowed: Bool)
 
   // Modules section.
   func isAnalyticsEnabled() -> Bool
@@ -42,6 +44,8 @@ import AppCenter
   // Crashes section.
   func hasCrashedInLastSession() -> Bool
   func generateTestCrash()
+  func trackError(_ error: Error, withProperties: Dictionary<String, String>?, attachments: [ErrorAttachmentLog]?)
+  func trackException(_ exceptionModel: ExceptionModel, withProperties: Dictionary<String, String>?, attachments: [ErrorAttachmentLog]?)
 
   // Last crash report section.
   func lastCrashReportIncidentIdentifier() -> String?

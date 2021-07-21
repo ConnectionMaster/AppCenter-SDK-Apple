@@ -28,7 +28,8 @@ class AppCenterViewController : NSViewController, NSTextFieldDelegate, NSTextVie
   @IBOutlet var logURLLabel : NSTextField?
   @IBOutlet var userIdLabel : NSTextField?
   @IBOutlet var setEnabledButton : NSButton?
-    
+  @IBOutlet var networkRequestsAllowed: NSButton?
+
   @IBOutlet weak var deviceIdField: NSTextField!
   @IBOutlet weak var startupModeField: NSComboBox!
   @IBOutlet weak var storageMaxSizeField: NSTextField!
@@ -52,6 +53,7 @@ class AppCenterViewController : NSViewController, NSTextFieldDelegate, NSTextVie
 
   override func viewWillAppear() {
     setEnabledButton?.state = appCenter.isAppCenterEnabled() ? .on : .off
+    networkRequestsAllowed?.state = appCenter.isNetworkRequestsAllowed() ? .on : .off
     setAppSecretButton?.isEnabled = startUpModeForCurrentSession == StartupMode.AppCenter.rawValue || startUpModeForCurrentSession == StartupMode.Both.rawValue
   }
 
@@ -62,6 +64,7 @@ class AppCenterViewController : NSViewController, NSTextFieldDelegate, NSTextVie
     logURLLabel?.stringValue = (UserDefaults.standard.object(forKey: kMSLogUrl) ?? prodLogUrl()) as! String
     userIdLabel?.stringValue = showUserId()
     setEnabledButton?.state = appCenter.isAppCenterEnabled() ? .on : .off
+    networkRequestsAllowed?.state = appCenter.isNetworkRequestsAllowed() ? .on : .off
   
     deviceIdField?.stringValue = AppCenterViewController.getDeviceIdentifier()!
     let indexNumber = UserDefaults.standard.integer(forKey: kMSStartTargetKey)
@@ -93,6 +96,11 @@ class AppCenterViewController : NSViewController, NSTextFieldDelegate, NSTextVie
   @IBAction func setEnabled(sender : NSButton) {
     appCenter.setAppCenterEnabled(sender.state == .on)
     sender.state = appCenter.isAppCenterEnabled() ? .on : .off
+  }
+
+  @IBAction func setNetworkRequestsChanged(_ sender: NSButton) {
+    appCenter.setNetworkRequestsAllowed(sender.state == .on)
+    sender.state = appCenter.isNetworkRequestsAllowed() ? .on : .off
   }
 
   @IBAction func overrideCountryCode(_ sender: NSButton) {
@@ -220,26 +228,22 @@ class AppCenterViewController : NSViewController, NSTextFieldDelegate, NSTextVie
   @IBAction func setUserID(_ sender: NSButton) {
     let alert: NSAlert = NSAlert()
     alert.messageText = "User ID"
-    alert.addButton(withTitle: "Reset")
     alert.addButton(withTitle: "Save")
+    alert.addButton(withTitle: "Reset")
     alert.addButton(withTitle: "Cancel")
-    let scrollView: NSScrollView = NSScrollView(frame: NSRect(x: 0, y: 0, width: 300, height: 40))
-    let textView: NSTextView = NSTextView(frame: NSRect(x: 0, y: 0, width: 290, height: 40))
-    textView.string = UserDefaults.standard.string(forKey: kMSUserIdKey) ?? ""
-    scrollView.documentView = textView
-    scrollView.hasVerticalScroller = true
-    scrollView.contentView.scroll(NSPoint(x: 0, y: textView.frame.size.height))
-    alert.accessoryView = scrollView
-    alert.alertStyle = .warning
+    let textField: NSTextField = NSTextField(frame: NSRect(x: 0, y: 0, width: 200, height: 25))
+    textField.stringValue = UserDefaults.standard.string(forKey: kMSUserIdKey) ?? ""
+    alert.accessoryView = textField
+    alert.alertStyle = .warning    
     switch(alert.runModal()) {
     case .alertFirstButtonReturn:
-      UserDefaults.standard.removeObject(forKey: kMSUserIdKey)
-      appCenter.setUserId(nil)
-      break
-    case .alertSecondButtonReturn:
-      let text = textView.string
+      let text = textField.stringValue
       UserDefaults.standard.set(text, forKey: kMSUserIdKey)
       appCenter.setUserId(text)
+      break
+    case .alertSecondButtonReturn:
+      UserDefaults.standard.removeObject(forKey: kMSUserIdKey)
+      appCenter.setUserId(nil)
       break
     default:
       break

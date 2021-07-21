@@ -30,7 +30,16 @@ class AppDelegate: UIResponder, UIApplicationDelegate, CrashesDelegate, CLLocati
   private var locationManager : CLLocationManager = CLLocationManager()
 
   var window: UIWindow?
-
+  func topMostViewController() -> UIViewController? {
+    guard var topController = window?.rootViewController else {
+      return nil
+    }
+    while let newTopController = topController.presentedViewController {
+      topController = newTopController
+    }
+    return topController
+  }
+    
   func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
     Crashes.delegate = self
 #if canImport(AppCenterDistribute)
@@ -56,7 +65,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate, CrashesDelegate, CLLocati
                                                     message: "The maximum size of the internal storage could not be set.",
                                                     preferredStyle: .alert)
             alertController.addAction(UIAlertAction(title: "OK", style: .default))
-            self.window?.rootViewController?.present(alertController, animated: true)
+            self.topMostViewController()?.present(alertController, animated: true)
           }
         }
       })
@@ -136,7 +145,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate, CrashesDelegate, CLLocati
       })
 
       // Show the alert controller.
-      self.window?.rootViewController?.present(alertController, animated: true)
+      self.topMostViewController()?.present(alertController, animated: true)
 
       return true
     })
@@ -208,56 +217,17 @@ class AppDelegate: UIResponder, UIApplicationDelegate, CrashesDelegate, CLLocati
     return true
   }
 
-  func crashes(_ crashes: Crashes, willSend errorReport: ErrorReport) {
+  func crashes(_ crashes: Crashes!, willSend errorReport: ErrorReport!) {
   }
 
-  func crashes(_ crashes: Crashes, didSucceedSending errorReport: ErrorReport) {
+  func crashes(_ crashes: Crashes!, didSucceedSending errorReport: ErrorReport!) {
   }
 
-  func crashes(_ crashes: Crashes, didFailSending errorReport: ErrorReport, withError error: Error) {
+  func crashes(_ crashes: Crashes, didFailSending errorReport: ErrorReport, withError error: Error?) {
   }
 
   func attachments(with crashes: Crashes, for errorReport: ErrorReport) -> [ErrorAttachmentLog] {
-    var attachments = [ErrorAttachmentLog]()
-
-    // Text attachment.
-    let text = UserDefaults.standard.string(forKey: "textAttachment") ?? ""
-    if !text.isEmpty {
-        let textAttachment = ErrorAttachmentLog.attachment(withText: text, filename: "user.log")!
-      attachments.append(textAttachment)
-    }
-
-    // Binary attachment.
-    let referenceUrl = UserDefaults.standard.url(forKey: "fileAttachment")
-    if referenceUrl != nil {
-#if !targetEnvironment(macCatalyst)
-      let asset = PHAsset.fetchAssets(withALAssetURLs: [referenceUrl!], options: nil).lastObject
-      if asset != nil {
-        let options = PHImageRequestOptions()
-        options.isSynchronous = true
-        PHImageManager.default().requestImageData(for: asset!, options: options, resultHandler: { (imageData, dataUTI, orientation, info) -> Void in
-          let pathExtension = NSURL(fileURLWithPath: dataUTI!).pathExtension
-          let uti = UTTypeCreatePreferredIdentifierForTag(kUTTagClassFilenameExtension, pathExtension! as NSString, nil)?.takeRetainedValue()
-          let mime = UTTypeCopyPreferredTagWithClass(uti!, kUTTagClassMIMEType)?.takeRetainedValue() as NSString?
-          let binaryAttachment = ErrorAttachmentLog.attachment(withBinary: imageData, filename: dataUTI, contentType: mime! as String)!
-          attachments.append(binaryAttachment)
-          print("Add binary attachment with \(imageData?.count ?? 0) bytes")
-        })
-      }
-#else
-      do {
-        let data = try Data(contentsOf: referenceUrl!)
-        let uti = UTTypeCreatePreferredIdentifierForTag(kUTTagClassFilenameExtension, referenceUrl!.pathExtension as NSString, nil)?.takeRetainedValue()
-        let mime = UTTypeCopyPreferredTagWithClass(uti!, kUTTagClassMIMEType)?.takeRetainedValue() as NSString?
-        let binaryAttachment = ErrorAttachmentLog.attachment(withBinary: data, filename: referenceUrl?.lastPathComponent, contentType: mime! as String)!
-        attachments.append(binaryAttachment)
-        print("Add binary attachment with \(data.count) bytes")
-      } catch {
-        print(error)
-      }
-#endif
-    }
-    return attachments
+    return PrepareErrorAttachments.prepareAttachments()
   }
 
   func requestLocation() {
@@ -310,7 +280,7 @@ extension AppDelegate: DistributeDelegate {
       })
 
       // Show the alert controller.
-      self.window?.rootViewController?.present(alertController, animated: true)
+      self.topMostViewController()?.present(alertController, animated: true)
       return true
     }
     return false
@@ -318,23 +288,10 @@ extension AppDelegate: DistributeDelegate {
   
   func distributeNoReleaseAvailable(_ distribute: Distribute) {
     NSLog("distributeNoReleaseAvailable invoked");
-    let alert = UIAlertController(title: nil, message: "No updates available", preferredStyle: .alert)
-    alert.addAction(UIAlertAction(title: "OK", style: .default, handler: nil))
-    self.window?.rootViewController?.present(alert, animated: true)
   }
 
   func distributeWillExitApp(_ distribute: Distribute) {
     print("distributeWillExitApp callback invoked");
-    DispatchQueue.main.async {
-      let alertController = UIAlertController(title: NSLocalizedString("distribute_alert_willExit_title", tableName: "Sasquatch", comment: ""),
-              message: NSLocalizedString("distribute_alert_willExit_message", tableName: "Sasquatch", comment: ""),
-              preferredStyle: .alert)
-
-      // Show alert saying that the app is closing
-      self.window?.rootViewController?.present(alertController, animated: true)
-    }
-
-    sleep(7)
   }
 }
 

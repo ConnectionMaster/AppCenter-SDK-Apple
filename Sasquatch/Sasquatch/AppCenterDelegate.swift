@@ -4,6 +4,7 @@
 #if !ACTIVE_COMPILATION_CONDITION_PUPPET
 import AppCenter
 import AppCenterAnalytics
+import AppCenterCrashes
 #endif
 
 /**
@@ -25,6 +26,8 @@ import AppCenterAnalytics
   func setUserId(_ userId: String?)
   func setLogUrl(_ logUrl: String?)
   func setCountryCode(_ countryCode: String?)
+  func isNetworkRequestsAllowed() -> Bool
+  func setNetworkRequestsAllowed(_ isAllowed: Bool)
   
   // Modules section.
   func isAnalyticsEnabled() -> Bool
@@ -49,6 +52,8 @@ import AppCenterAnalytics
   func hasCrashedInLastSession() -> Bool
   func hasReceivedMemoryWarningInLastSession() -> Bool
   func generateTestCrash()
+  func trackError(_ error: Error, withProperties: Dictionary<String, String>?, attachments: [ErrorAttachmentLog]?)
+  func trackException(_ exceptionModel: ExceptionModel, withProperties: Dictionary<String, String>?, attachments: [ErrorAttachmentLog]?)
   
   // Distribute section.
   func showConfirmationAlert()

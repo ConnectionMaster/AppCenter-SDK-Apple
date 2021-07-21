@@ -1504,11 +1504,12 @@ static NSURL *sfURL;
   XCTAssertNil(distribute.authenticationSession);
 
   // When
-  [distribute openURLInAuthenticationSessionWith:fakeURL];
+  [distribute openURLInAuthenticationSessionWith:fakeURL usePresentationContext:NO];
 
   // Then
   XCTAssertNotNil(distribute.authenticationSession);
-  XCTAssert([distribute.authenticationSession isKindOfClass:[SFAuthenticationSession class]]);
+  XCTAssert([distribute.authenticationSession isKindOfClass:[SFAuthenticationSession class]] ||
+            [distribute.authenticationSession isKindOfClass:[ASWebAuthenticationSession class]]);
 
   // Clear
   [appCenterMock stopMocking];
@@ -2620,7 +2621,7 @@ static NSURL *sfURL;
   assertThat(reportingParametersForUpdatedRelease[kMSACURLQueryDownloadedReleaseIdKey], equalTo(@1));
 }
 
-- (void)testCheckLatestFirstNewDistributionGroupId {
+- (void)checkLatestFirstNewDistributionGroupId:(int)status {
 
   // If
   NSString *distributionGroupId = @"GROUP-ID";
@@ -2648,7 +2649,7 @@ static NSURL *sfURL;
   // Create JSON response data.
   NSDictionary *dict = @{@"distribution_group_id" : distributionGroupId};
   NSData *data = [NSJSONSerialization dataWithJSONObject:dict options:0 error:nil];
-  [MSACHttpTestUtil stubResponseWithData:data statusCode:200 headers:nil name:@"httpStub_200"];
+  [MSACHttpTestUtil stubResponseWithData:data statusCode:status headers:nil name:[NSString stringWithFormat:@"httpStub_%d", status]];
 
   // When
   [self.sut startWithChannelGroup:OCMProtocolMock(@protocol(MSACChannelGroupProtocol))
@@ -2672,6 +2673,18 @@ static NSURL *sfURL;
   // Clear
   [distributeMock stopMocking];
   [httpClientClassMock stopMocking];
+}
+
+- (void)testCheckLatestFirstNewDistributionGroupIdWithStatus200 {
+    [self checkLatestFirstNewDistributionGroupId:200];
+}
+
+- (void)testCheckLatestFirstNewDistributionGroupIdWithStatus201 {
+    [self checkLatestFirstNewDistributionGroupId:201];
+}
+
+- (void)testCheckLatestFirstNewDistributionGroupIdWithStatus299 {
+    [self checkLatestFirstNewDistributionGroupId:299];
 }
 
 - (void)testCheckLatestReleaseReportReleaseInstall {
@@ -3019,7 +3032,7 @@ static NSURL *sfURL;
                   fromApplication:YES];
   NSString *urlPath = [NSString stringWithFormat:@"%@/%@", kMSACDefaultURLFormat, kMSACTestAppSecret];
   NSURLComponents *components = [NSURLComponents componentsWithString:urlPath];
-  [self.sut openURLInAuthenticationSessionWith:components.URL];
+  [self.sut openURLInAuthenticationSessionWith:components.URL usePresentationContext:NO];
 
   // Then
   OCMVerifyAll(mockLogger);
@@ -3047,7 +3060,7 @@ static NSURL *sfURL;
                   fromApplication:YES];
 
   // When
-  [self.sut openURLInAuthenticationSessionWith:fakeURL];
+  [self.sut openURLInAuthenticationSessionWith:fakeURL usePresentationContext:NO];
 
   // Then
   /* No crash. */
